@@ -130,7 +130,7 @@ int main( int argc, char* argv[] )
     /* Prepare particle set to track */
 
     dt::uint64_type NUM_PARTICLES = 50 * 1024;
-    dt::int64_type  TRACK_UNTIL_TURN = 10;
+    dt::int64_type  TRACK_UNTIL_TURN = 1000;
 
     if( argc >= 2 )
     {
