@@ -40,6 +40,21 @@ set( DEMO_APPLICATIONS ${DEMO_APPLICATIONS} demo01_sc1 )
 set( DEMO_APPLICATIONS_WITH_SC ${DEMO_APPLICATIONS_WITH_SC} demo01_sc1 )
 target_link_libraries( demo01_sc1 PRIVATE ${DEMOTRACK_LINK_LIBRARIES} )
 
+
+# ------------------------------------------------------------------------------
+# demo02: particles stored in global memory, lattice stored in global memory
+#         BUT: tracking with thread-local / private copy of the particles,
+#              i.e. avoiding the frequent global memory accesses
+
+add_executable( demo02_sc0 demo02.cu )
+set( DEMO_APPLICATIONS ${DEMO_APPLICATIONS} demo02_sc0 )
+target_link_libraries( demo02_sc0 PRIVATE ${DEMOTRACK_LINK_LIBRARIES} )
+
+add_executable( demo02_sc1 demo02.cu )
+set( DEMO_APPLICATIONS ${DEMO_APPLICATIONS} demo02_sc1 )
+set( DEMO_APPLICATIONS_WITH_SC ${DEMO_APPLICATIONS_WITH_SC} demo02_sc1 )
+target_link_libraries( demo02_sc1 PRIVATE ${DEMOTRACK_LINK_LIBRARIES} )
+
 # ==============================================================================
 # Apply common properties to all TARGETs in DEMO_APPLICATIONS:
 
