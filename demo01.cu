@@ -236,8 +236,15 @@ int main( int argc, char* argv[] )
     assert( status == CUDA_SUCCESS );
 
     std::cout << "number of particles : " << NUM_PARTICLES << "\r\n"
-              << "number of turns     : " << TRACK_UNTIL_TURN << "\r\n"
-              << "DEVICE              : " << pci_bus_id_str
+              << "number of turns     : " << TRACK_UNTIL_TURN << "\r\n";
+
+    #if defined( DEMOTRACK_ENABLE_BEAMFIELDS ) && DEMOTRACK_ENABLE_BEAMFIELDS == 1
+    std::cout << "space-charge enabled: true\r\n";
+    #else
+    std::cout << "space-charge enabled: false\r\n";
+    #endif /* SC emabled */
+
+    std::cout << "DEVICE              : " << pci_bus_id_str
               << " (" << props.name << " )\r\n"
               << "NUM_OF_BLOCKS       : " << GRID_SIZE << "\r\n"
               << "THREADS_PER_BLOCK   : " << BLOCK_SIZE << "\r\n";
