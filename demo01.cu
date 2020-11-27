@@ -237,19 +237,19 @@ int main( int argc, char* argv[] )
     status = ::cudaDeviceGetPCIBusId( pci_bus_id_str, 32, device );
     assert( status == CUDA_SUCCESS );
 
-    std::cout << "number of particles : " << NUM_PARTICLES << "\r\n"
-              << "number of turns     : " << TRACK_UNTIL_TURN << "\r\n";
+    std::cout << "number of particles   : " << NUM_PARTICLES << "\r\n"
+              << "number of turns       : " << TRACK_UNTIL_TURN << "\r\n";
 
     #if defined( DEMOTRACK_ENABLE_BEAMFIELDS ) && DEMOTRACK_ENABLE_BEAMFIELDS == 1
-    std::cout << "space-charge enabled: true\r\n";
+    std::cout << "space-charge enabled  : true\r\n";
     #else
-    std::cout << "space-charge enabled: false\r\n";
+    std::cout << "space-charge enabled  : false\r\n";
     #endif /* SC emabled */
 
-    std::cout << "DEVICE              : " << pci_bus_id_str
-              << " (" << props.name << " )\r\n"
-              << "NUM_OF_BLOCKS       : " << GRID_SIZE << "\r\n"
-              << "THREADS_PER_BLOCK   : " << BLOCK_SIZE << "\r\n";
+    std::cout << "DEVICE                : " << pci_bus_id_str
+              << " ( " << props.name << " )\r\n"
+              << "NUM_OF_BLOCKS         : " << GRID_SIZE << "\r\n"
+              << "THREADS_PER_BLOCK     : " << BLOCK_SIZE << "\r\n";
 
     auto start_time = std::chrono::steady_clock::now();
     Track_particles_until_turn<<< GRID_SIZE, BLOCK_SIZE >>>(
@@ -263,11 +263,11 @@ int main( int argc, char* argv[] )
     std::chrono::duration< double > const wtime = stop_time - start_time;
 
     std::cout << "-------------------------------------------------------\r\n"
-              << "Elapsed time        : " << wtime.count() << " sec total \r\n"
-              << "                    : " << wtime.count() / (
+              << "Elapsed time          : " << wtime.count() << " sec total \r\n"
+              << "                      : " << wtime.count() / (
                 std::max( NUM_PARTICLES * TRACK_UNTIL_TURN,
-                          dt::uint64_type{ 1 } ) ) << " sec / particle / turn\r\n"
-              << std::endl;
+                          dt::uint64_type{ 1 } ) )
+              << " sec / particle / turn\r\n";
 
     /* Fetch data */
 
