@@ -39,6 +39,9 @@ namespace demotrack
             /* Check whether |p.x| < 1.0 and |p.y| < 1.0 */
             p.state &= ( uint64_type )( ( sign_x * p.x < 1. ) &
                                         ( sign_y * p.y < 1. ) );
+
+            // Effectively only increment if particle is not lost
+            p.at_element += p.state;
         }
 
         DEMOTRACK_FN uint64_type track( Particle& __restrict__ p,
@@ -53,6 +56,9 @@ namespace demotrack
             p.x += p.px * this->length * lpzi;
             p.y += p.py * this->length * lpzi;
             p.zeta += p.rvv * this->length - one_plus_delta * lpzi;
+
+            /* NOTE: we do not increment p.at_element here -> this is done in
+             * GLOBAL_APERTURE_CHECK */
 
             return slot_index + Drift::NUM_SLOTS();
         }
@@ -111,6 +117,10 @@ namespace demotrack
             p.px += dPx;
             p.py += dPy;
 
+            // NOTE: The particle should not be here if it is lost!!!
+            // But: effectively only increment if particle is not lost
+            p.at_element += p.state;
+
             return slot_index + Multipole::NUM_SLOTS();
         }
 
@@ -143,6 +153,10 @@ namespace demotrack
             double const charge = p.charge0 * p.charge_ratio;
             p.add_to_energy( this->voltage * charge * sin( phase ) );
 
+            // NOTE: The particle should not be here if it is lost!!!
+            // But: effectively only increment if particle is not lost
+            p.at_element += p.state;
+
             return slot_index + Cavity::NUM_SLOTS();
         }
 
@@ -165,6 +179,10 @@ namespace demotrack
             uint64_t const stored_slot_idx = ( uint64_type )this->next_slot_idx;
             uint64_type const min_next_slot_idex =
                 slot_index + EndOfTrack::NUM_SLOTS();
+
+            // NOTE: The particle should not be here if it is lost!!!
+            // But: effectively only increment if particle is not lost
+            p.at_element += p.state;
 
             if( ends_turn > 0. )
             {
