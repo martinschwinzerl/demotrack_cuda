@@ -155,9 +155,11 @@ int main( int argc, char* argv[] )
 
     std::vector< dt::Particle > particles_host( NUM_PARTICLES );
 
+    dt::uint64_type particle_id = 0u;
     for( auto& p : particles_host )
     {
         p.init( MASS0, CHARGE0, P0_C, DELTA );
+        p.id = particle_id++;
     }
 
     /* ********************************************************************* */
