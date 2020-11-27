@@ -14,7 +14,7 @@ if( CMAKE_CUDA_COMPILER )
 endif()
 
 if( CMAKE_VERSION VERSION_GREATER_EQUAL 3.17.0 )
-    find_package( CudaToolkit REQUIRED )
+    find_package( CUDAToolkit REQUIRED )
     set( DEMOTRACK_LINK_LIBRARIES ${DEMOTRACK_LINK_LIBRARIES} CUDA::cudart )
 else()
     find_package( CUDA REQUIRED )
