@@ -52,7 +52,9 @@ namespace demotrack
             buffer[ 14 ] = 0.0;            // q0 : hxl == 0.0
             buffer[ 15 ] = 0.0;            // q0 : hyl == 0.0
             buffer[ 16 ] = 0.0;            // q0 : bal[ 0 ] = 0.0
-            buffer[ 17 ] = 0.1657145946;   // q0 : bal[ 1 ] = 0.1657145946
+            buffer[ 17 ] = 0.0;            // q0 : bal[ 1 ] = 0.0
+            buffer[ 18 ] = 0.1657145946;   // q0 : bal[ 2 ] = 0.1657145946
+            buffer[ 19 ] = 0.0;            // q0 : bal[ 3 ] = 0.0
             // ---------------------------------------------------------------------
             // element 3: drift drift1 ;   starts at idx = 20
             buffer[ 20 ] = DRIFT_TYPE;     // drift1 : type_id
@@ -77,11 +79,13 @@ namespace demotrack
             buffer[ 36 ] = 0.0;            // q1 : hxl == 0.0
             buffer[ 37 ] = 0.0;            // q1 : hyl == 0.0
             buffer[ 38 ] = 0.0;            // q1 : bal[ 0 ] = 0.0
-            buffer[ 39 ] = -0.1657145946;  // q1 : bal[ 1 ] = -0.1685973315
+            buffer[ 39 ] = 0.0;            // q1 : bal[ 1 ] = 0.0
+            buffer[ 40 ] = -0.1657145946;  // q1 : bal[ 2 ] = -0.1685973315
+            buffer[ 41 ] = 0.0;            // q1 : bal[ 3 ] = 0.0
             // ---------------------------------------------------------------------
             // element 7: drift drift3 ;   starts at idx = 42
             buffer[ 42 ] = DRIFT_TYPE;     // drift3 : type_id
-            buffer[ 42 ] = 5.;             // drift3 : length == 5 m
+            buffer[ 43 ] = 5.;             // drift3 : length == 5 m
             // ---------------------------------------------------------------------
             // element 8: cavity cavity0 ; starts at idx = 44
             buffer[ 44 ] = CAVITY_TYPE;    // drift3 : type_id
@@ -97,8 +101,8 @@ namespace demotrack
                     dt::BEAM_ELEMENT_END_OF_TRACK );
 
                 buffer[ 49 ] = 0.0;    // eot0 : start_turn_at_element == 0
-                buffer[ 46 ] = 0.0;    // eot0 : next_slot_idx == 0
-                buffer[ 47 ] = 1.0;    // eot0 : ends_turn == 1
+                buffer[ 50 ] = 0.0;    // eot0 : next_slot_idx == 0
+                buffer[ 51 ] = 1.0;    // eot0 : ends_turn == 1
             }
 
             allocated_num_slots = required_slots;
