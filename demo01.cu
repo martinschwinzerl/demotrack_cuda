@@ -276,7 +276,38 @@ int main( int argc, char* argv[] )
                            ::cudaMemcpyDeviceToHost );
     assert( status == CUDA_SUCCESS );
 
-    /* Free resources */
+    /* ********************************************************************* */
+    /* Verify tracking results */
+
+    dt::uint64_type num_active_particles = 0u;
+    dt::uint64_type num_lost_particles = 0u;
+
+    for( auto& p : particles_host )
+    {
+        if( ( p.state == 1 ) && ( p.at_turn == TRACK_UNTIL_TURN ) )
+        {
+            ++num_active_particles;
+        }
+        else if( ( p.state == 0 ) && ( p.at_turn < TRACK_UNTIL_TURN ) )
+        {
+            ++num_lost_particles;
+        }
+        else
+        {
+            std::cerr << "illegal particle id = " << p.id
+                      << ", at_turn = " << p.at_turn
+                      << ", at_element = " << p.at_element
+                      << ", state = " << p.state << std::endl;
+        }
+    }
+
+    std::cout << "-------------------------------------------------------\r\n"
+              << "num lost particles    : " << num_lost_particles << "\r\n"
+              << "num active particles  : " << num_active_particles << "\r\n"
+              << std::endl;
+
+    /* ********************************************************************* */
+    /* Cleaning up, Freeing resources */
 
     ::cudaFree( lattice_dev );
     lattice_dev = nullptr;
