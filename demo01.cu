@@ -251,23 +251,44 @@ int main( int argc, char* argv[] )
               << "NUM_OF_BLOCKS         : " << GRID_SIZE << "\r\n"
               << "THREADS_PER_BLOCK     : " << BLOCK_SIZE << "\r\n";
 
-    auto start_time = std::chrono::steady_clock::now();
+    /* Prepare cuda events to estimate the elapsed wall time */
+
+    ::cudaEvent_t start;
+    status = ::cudaEventCreate( &start );
+    assert( status == CUDA_SUCCESS );
+
+    ::cudaEvent_t stop;
+    status = ::cudaEventCreate( &stop );
+    assert( status == CUDA_SUCCESS );
+
+    status = ::cudaEventRecord( start );
+    assert( status == CUDA_SUCCESS );
+
+    /* Run kernel */
+
     Track_particles_until_turn<<< GRID_SIZE, BLOCK_SIZE >>>(
         particles_dev, NUM_PARTICLES, lattice_dev, LATTICE_SIZE,
             TRACK_UNTIL_TURN );
     status = ::cudaDeviceSynchronize();
 
-    auto stop_time = std::chrono::steady_clock::now();
+    /* Estimate wall time */
+
+    status = ::cudaEventRecord( stop );
     assert( status == CUDA_SUCCESS );
 
-    std::chrono::duration< double > const wtime = stop_time - start_time;
+    status = ::cudaEventSynchronize( stop );
+    assert( status == CUDA_SUCCESS );
+
+    float wtime = 0.0;
+    status = ::cudaEventElapsedTime( &wtime, start, stop );
+    assert( status == CUDA_SUCCESS );
 
     std::cout << "-------------------------------------------------------\r\n"
-              << "Elapsed time          : " << wtime.count() << " sec total \r\n"
-              << "                      : " << wtime.count() / (
+              << "Elapsed time          : " << wtime << " msec total \r\n"
+              << "                      : " << wtime / (
                 std::max( NUM_PARTICLES * TRACK_UNTIL_TURN,
                           dt::uint64_type{ 1 } ) )
-              << " sec / particle / turn\r\n";
+              << " msec / particle / turn\r\n";
 
     /* Fetch data */
 
@@ -314,6 +335,9 @@ int main( int argc, char* argv[] )
 
     ::cudaFree( particles_dev );
     particles_dev = nullptr;
+
+    ::cudaEventDestroy( start );
+    ::cudaEventDestroy( stop );
 
     return 0;
 }
