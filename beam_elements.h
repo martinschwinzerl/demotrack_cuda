@@ -15,6 +15,8 @@ namespace demotrack
         BEAM_ELEMENT_DRIFT_EXACT = 3,
         BEAM_ELEMENT_MULTIPOLE = 4,
         BEAM_ELEMENT_CAVITY = 5,
+        BEAM_ELEMENT_XY_SHIFT = 6,
+        BEAM_ELEMENT_SROTATION = 7,
         BEAM_ELEMENT_SC_COASTING = 16,
         BEAM_ELEMENT_END_OF_TRACK = 255
     }
@@ -67,11 +69,41 @@ namespace demotrack
         double length;
     };
 
+    struct __attribute__((aligned( 8 ))) DriftExact
+    {
+        static DEMOTRACK_FN constexpr uint64_type NUM_SLOTS() noexcept
+        {
+            return uint64_type{ 2 };
+        }
+
+        DEMOTRACK_FN uint64_type track( Particle& __restrict__ p,
+            uint64_type const slot_index ) const noexcept
+        {
+            using std::sqrt;
+
+            double const delta_plus_one = p.delta + double{ 1.0 };
+            double const lpzi = this->length / sqrt( delta_plus_one *
+                delta_plus_one - ( p.px * p.px + p.py * p.py ) );
+
+            p.x += p.px * lpzi;
+            p.y += p.py * lpzi;
+            p.zeta += p.rvv * this->length - delta_plus_one * lpzi;
+
+            /* NOTE: we do not increment p.at_element here -> this is done in
+             * GLOBAL_APERTURE_CHECK */
+
+            return slot_index + Drift::NUM_SLOTS();
+        }
+
+        double type_id;
+        double length;
+    };
+
     struct __attribute__((aligned( 8 ))) Multipole
     {
         DEMOTRACK_FN static constexpr uint64_type NUM_SLOTS() noexcept
         {
-            return uint64_type{ 9 };
+            return uint64_type{ 39 };
         }
 
         DEMOTRACK_FN uint64_type track( Particle& __restrict__ p,
@@ -129,7 +161,7 @@ namespace demotrack
         double length;
         double hxl;
         double hyl;
-        double bal[ 4 ];
+        double bal[ 34 ];
     };
 
     struct __attribute__((aligned( 8 ))) Cavity
@@ -166,6 +198,62 @@ namespace demotrack
         double lag;
     };
 
+    struct __attribute__((aligned(8))) XYShift
+    {
+        DEMOTRACK_FN static constexpr uint64_type NUM_SLOTS() noexcept
+        {
+            return uint64_type{ 3 };
+        }
+
+        DEMOTRACK_FN uint64_type track( Particle& __restrict__ p,
+            uint64_type const slot_index ) const noexcept
+        {
+            p.x -= this->dx;
+            p.y -= this->dy;
+
+            // NOTE: The particle should not be here if it is lost!!!
+            // But: effectively only increment if particle is not lost
+            p.at_element += p.state;
+
+            return slot_index + XYShift::NUM_SLOTS();
+        }
+
+        double type_id;
+        double dx;
+        double dy;
+    };
+
+    struct __attribute__((aligned(8))) SRotation
+    {
+        DEMOTRACK_FN static constexpr uint64_type NUM_SLOTS() noexcept
+        {
+            return uint64_type{ 3 };
+        }
+
+        DEMOTRACK_FN uint64_type track( Particle& __restrict__ p,
+            uint64_type const slot_index ) const noexcept
+        {
+            double const x_hat  = p.x  * this->cos_z + p.y  * this->sin_z;
+            double const px_hat = p.px * this->cos_z + p.py * this->sin_z;
+
+            p.y  = -p.x  * this->sin_z + p.y  * this->cos_z;
+            p.py = -p.px * this->sin_z + p.py * this->cos_z;
+
+            p.x  = x_hat;
+            p.px = px_hat;
+
+            // NOTE: The particle should not be here if it is lost!!!
+            // But: effectively only increment if particle is not lost
+            p.at_element += p.state;
+
+            return slot_index + SRotation::NUM_SLOTS();
+        }
+
+        double type_id;
+        double cos_z;
+        double sin_z;
+    };
+
     struct __attribute__((aligned( 8 ))) EndOfTrack
     {
         DEMOTRACK_FN static constexpr uint64_type NUM_SLOTS() noexcept
@@ -200,9 +288,6 @@ namespace demotrack
         double next_slot_idx;
         double ends_turn;
     };
-
-
-
 }
 
 #endif /* DEMOTRACK_CUDA_BEAM_ELEMENTS_H__ */

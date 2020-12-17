@@ -59,10 +59,48 @@ __global__ void Track_particles_until_turn(
                         break;
                     }
 
+                    case dt::BEAM_ELEMENT_DRIFT_EXACT: // cf. beam_elements.h
+                    {
+                        const dt::DriftExact *const __restrict__ elem =
+                            ( dt::DriftExact const* )&lattice_buffer[ slot_idx ];
+
+                        dt::uint64_type const next_slot_idx =
+                            elem->track( p, slot_idx );
+
+                        // Use GLOBAL_APERTURE_CHECK from Drift -> it's the same
+                        dt::Drift::GLOBAL_APERTURE_CHECK( p );
+                        slot_idx = next_slot_idx;
+                        break;
+                    }
+
                     case dt::BEAM_ELEMENT_MULTIPOLE: // cf. beam_elements.h
                     {
                         const dt::Multipole *const __restrict__ elem =
                             ( dt::Multipole const* )&lattice_buffer[ slot_idx ];
+
+                        dt::uint64_type const next_slot_idx =
+                            elem->track( p, slot_idx );
+
+                        slot_idx = next_slot_idx;
+                        break;
+                    }
+
+                    case dt::BEAM_ELEMENT_XY_SHIFT: // cf. beam_elements.h
+                    {
+                        const dt::XYShift *const __restrict__ elem =
+                            ( dt::XYShift const* )&lattice_buffer[ slot_idx ];
+
+                        dt::uint64_type const next_slot_idx =
+                            elem->track( p, slot_idx );
+
+                        slot_idx = next_slot_idx;
+                        break;
+                    }
+
+                    case dt::BEAM_ELEMENT_SROTATION: // cf. beam_elements.h
+                    {
+                        const dt::SRotation *const __restrict__ elem =
+                            ( dt::SRotation const* )&lattice_buffer[ slot_idx ];
 
                         dt::uint64_type const next_slot_idx =
                             elem->track( p, slot_idx );
@@ -164,11 +202,11 @@ int main( int argc, char* argv[] )
     /* ********************************************************************* */
     /* Prepare lattice / machine description: */
 
-    double simple_fodo_lattice[ 64 ];
+    double fodo_lattice[ 200 ];
 
     /* see fodo_lattice.h for the implementation of create_fodo_lattice */
     dt::uint64_type const LATTICE_SIZE =
-        dt::create_fodo_lattice( &simple_fodo_lattice[ 0 ], 64u );
+        dt::create_fodo_lattice( &fodo_lattice[ 0 ], 200u );
 
     /* ********************************************************************** */
     /* Allocate buffers on the device */
@@ -186,7 +224,7 @@ int main( int argc, char* argv[] )
 
     /* Copy particle and lattice data to device */
 
-    status = ::cudaMemcpy( lattice_dev, &simple_fodo_lattice[ 0 ],
+    status = ::cudaMemcpy( lattice_dev, &fodo_lattice[ 0 ],
         LATTICE_SIZE * sizeof( double ), ::cudaMemcpyHostToDevice );
     assert( status == CUDA_SUCCESS );
 
