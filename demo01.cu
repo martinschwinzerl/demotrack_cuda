@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <cassert>
-#include <chrono>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -166,6 +166,7 @@ int main( int argc, char* argv[] )
 
     dt::uint64_type NUM_PARTICLES = 50 * 1024;
     dt::int64_type  TRACK_UNTIL_TURN = 1000;
+    std::string path_to_lattice_data = std::string{};
 
     if( argc >= 2 )
     {
@@ -174,13 +175,19 @@ int main( int argc, char* argv[] )
         if( argc >= 3 )
         {
             TRACK_UNTIL_TURN = std::stoi( argv[ 2 ] );
+
+            if( argc >= 4 )
+            {
+                path_to_lattice_data = std::string{ argv[ 3 ] };
+            }
         }
     }
     else
     {
         std::cout << "Usage : " << argv[ 0 ]
-                  << " [NUM_PARTICLES] [TRACK_UNTIL_TURN]\r\n"
-                  << std::endl;
+                  << " [NUM_PARTICLES] [TRACK_UNTIL_TURN]"
+                  << " [PATH_TO_LATTICE_DATA]"
+                  << std::endl << std::endl;
     }
 
     double const P0_C    = 470e9;  /* Kinetic energy, [eV]  */
@@ -200,11 +207,33 @@ int main( int argc, char* argv[] )
     /* ********************************************************************* */
     /* Prepare lattice / machine description: */
 
-    double fodo_lattice[ 200 ];
+    std::vector< double > lattice_host;
+    dt::uint64_type LATTICE_SIZE = 0u;
 
-    /* see fodo_lattice.h for the implementation of create_fodo_lattice */
-    dt::uint64_type const LATTICE_SIZE =
-        dt::create_fodo_lattice( &fodo_lattice[ 0 ], 200u );
+    if( path_to_lattice_data.empty() )
+    {
+        std::ifstream in_data( path_to_lattice_data.c_str(),
+                               std::ios::binary | std::ios::in );
+        double temp;
+        in_data >> temp;
+        dt::uint64_type const num_slots = static_cast< dt::uint64_type >( temp );
+        lattice_host.reserve( num_slots );
+
+        while( !in_data.eof() )
+        {
+            in_data >> temp;
+            lattice_host.push_back( temp );
+        }
+
+        LATTICE_SIZE = lattice_host.size();
+    }
+
+    if( LATTICE_SIZE == 0u )
+    {
+        path_to_lattice_data.clear();
+        lattice_host.resize( 200u, double{ 0 } );
+        LATTICE_SIZE = dt::create_fodo_lattice( lattice_host.data(), 200u );
+    }
 
     /* ********************************************************************** */
     /* Allocate buffers on the device */
@@ -222,7 +251,7 @@ int main( int argc, char* argv[] )
 
     /* Copy particle and lattice data to device */
 
-    status = ::cudaMemcpy( lattice_dev, &fodo_lattice[ 0 ],
+    status = ::cudaMemcpy( lattice_dev, lattice_host.data(),
         LATTICE_SIZE * sizeof( double ), ::cudaMemcpyHostToDevice );
     assert( status == CUDA_SUCCESS );
 
@@ -274,6 +303,16 @@ int main( int argc, char* argv[] )
 
     std::cout << "number of particles   : " << NUM_PARTICLES << "\r\n"
               << "number of turns       : " << TRACK_UNTIL_TURN << "\r\n";
+
+    if( !path_to_lattice_data.empty() )
+    {
+        std::cout << "lattice               : "
+                  << path_to_lattice_data << "\r\n";
+    }
+    else
+    {
+        std::cout << "lattice               : generated fodo lattice\r\n";
+    }
 
     #if defined( DEMOTRACK_ENABLE_BEAMFIELDS ) && DEMOTRACK_ENABLE_BEAMFIELDS == 1
     std::cout << "space-charge enabled  : true\r\n";
@@ -376,4 +415,3 @@ int main( int argc, char* argv[] )
 
     return 0;
 }
-
