@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <cassert>
-#include <fstream>
+#include <cstdio>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -12,7 +12,7 @@
 #include "particle.h"
 #include "beam_elements.h"
 #include "beamfields.h"
-#include "fodo_lattice.h"
+#include "lattice.h"
 
 __global__ void Track_particles_until_turn(
     demotrack::Particle* particle_set,
@@ -210,32 +210,8 @@ int main( int argc, char* argv[] )
     /* Prepare lattice / machine description: */
 
     std::vector< double > lattice_host;
-    dt::uint64_type LATTICE_SIZE = 0u;
-
-    if( path_to_lattice_data.empty() )
-    {
-        std::ifstream in_data( path_to_lattice_data.c_str(),
-                               std::ios::binary | std::ios::in );
-        double temp;
-        in_data >> temp;
-        dt::uint64_type const num_slots = static_cast< dt::uint64_type >( temp );
-        lattice_host.reserve( num_slots );
-
-        while( !in_data.eof() )
-        {
-            in_data >> temp;
-            lattice_host.push_back( temp );
-        }
-
-        LATTICE_SIZE = lattice_host.size();
-    }
-
-    if( LATTICE_SIZE == 0u )
-    {
-        path_to_lattice_data.clear();
-        lattice_host.resize( 200u, double{ 0 } );
-        LATTICE_SIZE = dt::create_fodo_lattice( lattice_host.data(), 200u );
-    }
+    dt::uint64_type const LATTICE_SIZE = dt::load_lattice(
+        lattice_host, path_to_lattice_data );
 
     /* ********************************************************************** */
     /* Allocate buffers on the device */

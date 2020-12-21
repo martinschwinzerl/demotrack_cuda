@@ -24,12 +24,15 @@ include_directories( ${CMAKE_SOURCE_DIR} )
 # ------------------------------------------------------------------------------
 # demo01: particles stored in global memory, lattice stored in global memory
 
+set( COMMON_HEADERS definitions.h beam_elements.h beamfields.h
+                    lattice.h particle.h )
+
 set( CUDA_NVCC_FLAGS "-arch=${CUDA_SM_ARCH};-fmad=false;-lineinfo;-D_FORCE_INLINES" )
 
-CUDA_ADD_EXECUTABLE( demo01_sc0 demo01.cu )
+CUDA_ADD_EXECUTABLE( demo01_sc0 demo01.cu ${COMMON_HEADERS} )
 target_link_libraries( demo01_sc0 PRIVATE ${DEMOTRACK_LINK_LIBRARIES} )
 
-CUDA_ADD_EXECUTABLE( demo02_sc0 demo02.cu )
+CUDA_ADD_EXECUTABLE( demo02_sc0 demo02.cu ${COMMON_HEADERS} )
 target_link_libraries( demo02_sc0 PRIVATE ${DEMOTRACK_LINK_LIBRARIES} )
 
 # ------------------------------------------------------------------------------
