@@ -9,10 +9,11 @@
 #include <cuda_runtime.h>
 
 #include "definitions.h"
+#include "config.h"
 #include "particle.h"
 #include "beam_elements.h"
 #include "beamfields.h"
-#include "fodo_lattice.h"
+#include "lattice.h"
 
 __global__ void Track_particles_until_turn(
     demotrack::Particle* particle_set,
@@ -167,6 +168,7 @@ int main( int argc, char* argv[] )
     dt::uint64_type NUM_PARTICLES = 50 * 1024;
     dt::int64_type  TRACK_UNTIL_TURN = 1000;
     std::string path_to_lattice_data = std::string{};
+    std::string path_to_particle_data = std::string{};
 
     if( argc >= 2 )
     {
@@ -178,7 +180,12 @@ int main( int argc, char* argv[] )
 
             if( argc >= 4 )
             {
-                path_to_lattice_data = std::string{ argv[ 3 ] };
+                path_to_particle_data = std::string{ argv[ 3 ] };
+
+                if( argc >= 5 )
+                {
+                    path_to_lattice_data = std::string{ argv[ 4 ] };
+                }
             }
         }
     }
@@ -186,23 +193,15 @@ int main( int argc, char* argv[] )
     {
         std::cout << "Usage : " << argv[ 0 ]
                   << " [NUM_PARTICLES] [TRACK_UNTIL_TURN]"
-                  << " [PATH_TO_LATTICE_DATA]"
-                  << std::endl << std::endl;
+                  << " [PATH_TO_PARTICLE_DATA] [PATH_TO_LATTICE_DATA]\r\n"
+                  << std::endl;
     }
 
-    double const P0_C    = 470e9;  /* Kinetic energy, [eV]  */
-    double const MASS0   = 938.272081e6; /* Proton rest mass, [eV] */
-    double const CHARGE0 = 1.0; /* Reference particle charge; here == proton */
-    double const DELTA   = 0.0; /* momentum deviation from reference particle */
+    /* ********************************************************************* */
+    /* Prepare particle data: */
 
-    std::vector< dt::Particle > particles_host( NUM_PARTICLES );
-
-    dt::uint64_type particle_id = 0u;
-    for( auto& p : particles_host )
-    {
-        p.init( MASS0, CHARGE0, P0_C, DELTA );
-        p.id = particle_id++;
-    }
+    std::vector< dt::Particle > particles_host;
+    dt::Particles_load( particles_host, NUM_PARTICLES, path_to_particle_data );
 
     /* ********************************************************************* */
     /* Prepare lattice / machine description: */
@@ -218,11 +217,11 @@ int main( int argc, char* argv[] )
     double* lattice_dev = nullptr;
 
     auto status = ::cudaMalloc( ( void** )&particles_dev,
-        sizeof( dt::Particle ) * NUM_PARTICLES );
+        sizeof( dt::Particle ) * particles_host.size() );
     assert( status == CUDA_SUCCESS );
 
     status = ::cudaMalloc( ( void** )&lattice_dev,
-        LATTICE_SIZE * sizeof( double ) );
+        sizeof( double ) * LATTICE_SIZE );
     assert( status == CUDA_SUCCESS );
 
     /* Copy particle and lattice data to device */
@@ -243,14 +242,28 @@ int main( int argc, char* argv[] )
     int BLOCK_SIZE = 0;
     int MIN_GRID_SIZE = 0;
 
+    #if defined( DEMOTRACK_HIP_CALCULATE_BLOCKSIZE ) && \
+        ( DEMOTRACK_HIP_CALCULATE_BLOCKSIZE == 1 )
+
     status = ::cudaOccupancyMaxPotentialBlockSize(
-        &MIN_GRID_SIZE, /* -> minimum grid size needed for max occupancy */
+        &GRID_SIZE, /* -> minimum grid size needed for max occupancy */
         &BLOCK_SIZE, /* -> estimated optimal block size */
         Track_particles_until_turn, /* the kernel */
         0u, /* -> dynamic shared memory per block required [bytes] */
         0u /* -> max block size limit for the kernel; 0 == no limit */ );
 
     assert( status == CUDA_SUCCESS );
+
+    #elif defined( DEMOTRACK_DEFAULT_BLOCK_SIZE ) && \
+         ( DEMOTRACK_DEFAULT_BLOCK_SIZE > 0 )
+
+    BLOCK_SIZE = DEMOTRACK_DEFAULT_BLOCK_SIZE;
+
+    #else
+
+    BLOCK_SIZE = 1;
+
+    #endif /* DEMOTRACK_HIP_CALCULATE_BLOCKSIZE */
 
     assert( BLOCK_SIZE > 0 );
     int const GRID_SIZE = ( NUM_PARTICLES + BLOCK_SIZE - 1 ) / BLOCK_SIZE;
@@ -280,6 +293,16 @@ int main( int argc, char* argv[] )
     std::cout << "number of particles   : " << NUM_PARTICLES << "\r\n"
               << "number of turns       : " << TRACK_UNTIL_TURN << "\r\n";
 
+    if( !path_to_particle_data.empty() )
+    {
+        std::cout << "particle data         : "
+                  << path_to_lattice_data << "\r\n";
+    }
+    else
+    {
+        std::cout << "particle data         : generated\r\n";
+    }
+
     if( !path_to_lattice_data.empty() )
     {
         std::cout << "lattice               : "
@@ -299,6 +322,7 @@ int main( int argc, char* argv[] )
     std::cout << "DEVICE                : " << pci_bus_id_str
               << " ( " << props.name << " )\r\n"
               << "NUM_OF_BLOCKS         : " << GRID_SIZE << "\r\n"
+              << "MIN_GRID_SIZE         : " << MIN_GRID_SIZE << "\r\n"
               << "THREADS_PER_BLOCK     : " << BLOCK_SIZE << "\r\n";
 
     /* Prepare cuda events to estimate the elapsed wall time */

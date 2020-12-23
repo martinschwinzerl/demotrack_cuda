@@ -1,6 +1,17 @@
 cmake_minimum_required( VERSION 3.11 FATAL_ERROR )
 project( demotrack_cuda_cxx LANGUAGES C CXX )
 
+option( USE_BLOCKSIZE_CALCULATOR "Use blocksize calculator" OFF )
+set( DEMOTRACK_DEFAULT_BLOCK_SIZE "512" CACHE STRING "Default grid block size" )
+
+if( USE_BLOCKSIZE_CALCULATOR )
+    set( DEMOTRACK_USE_BLOCKSIZE_CALCULATOR "1" )
+else()
+    set( DEMOTRACK_USE_BLOCKSIZE_CALCULATOR "0" )
+endif()
+
+configure_file( config.h.template ${CMAKE_SOURCE_DIR}/config.h @ONLY )
+
 # -------------------------------------------------------------------------------
 # Enable CUDA support
 
@@ -21,11 +32,13 @@ set( CMAKE_CUDA_STANDARD_REQUIRED ON )
 
 include_directories( ${CMAKE_SOURCE_DIR} )
 
-# ------------------------------------------------------------------------------
-# demo01: particles stored in global memory, lattice stored in global memory
-
 set( COMMON_HEADERS definitions.h beam_elements.h beamfields.h
                     lattice.h particle.h )
+
+add_subdirectory( tools )
+
+# ------------------------------------------------------------------------------
+# demo01: particles stored in global memory, lattice stored in global memory
 
 set( CUDA_NVCC_FLAGS "-arch=${CUDA_SM_ARCH};-fmad=false;-lineinfo;-D_FORCE_INLINES" )
 
