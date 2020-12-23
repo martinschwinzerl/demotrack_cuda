@@ -134,7 +134,8 @@ namespace demotrack
         demotrack::create_fodo_lattice_flags_type const flags =
             demotrack::FODO_LATTICE_FLAGS_NONE ) {
 
-        uint64_type lattice_size = uint64_type{ 0 };
+        namespace dt = demotrack;
+        dt::uint64_type lattice_size = dt::uint64_type{ 0 };
         lattice_data.clear();
 
         if( !path_to_lattice_data.empty() )
@@ -145,16 +146,16 @@ namespace demotrack
             {
                 double temp;
 
-                demotrack::uint64_type const ret = std::fread(
+                dt::uint64_type const ret = std::fread(
                     &temp, sizeof( double ), 1u, fp );
 
-                demotrack::uint64_type const num_slots = static_cast<
-                    demotrack::uint64_type >( temp );
+                dt::uint64_type const num_slots = static_cast<
+                    dt::uint64_type >( temp );
 
                 if( ( ret == 1u ) && ( num_slots > 0u ) )
                 {
                     lattice_data.resize( num_slots, double{ 0.0 } );
-                    demotrack::uint64_type const num_slots_read = std::fread(
+                    dt::uint64_type const num_slots_read = std::fread(
                         lattice_data.data(), sizeof( double ), num_slots, fp );
 
                     if( num_slots_read == num_slots )
@@ -169,7 +170,7 @@ namespace demotrack
         {
             path_to_lattice_data.clear();
             lattice_data.resize( 200u, double{ 0 } );
-            lattice_size = demotrack::create_fodo_lattice(
+            lattice_size = dt::create_fodo_lattice(
                 lattice_data.data(), 200u, flags );
         }
 
