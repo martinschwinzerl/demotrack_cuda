@@ -1,8 +1,11 @@
 #ifndef DEMOTRACK_CUDA_PARTICLE_H__
 #define DEMOTRACK_CUDA_PARTICLE_H__
 
-#include <cmath>
 #include "definitions.h"
+
+#include <cmath>
+#include <vector>
+#include <string>
 
 namespace demotrack
 {
@@ -97,6 +100,114 @@ namespace demotrack
         uint64_type id;
     };
 
+    DEMOTRACK_HOST_FN void Particles_load(
+        std::vector< demotrack::Particle >& __restrict__ particles_data,
+        uint64_type const num_of_particles,
+        std::string& __restrict__ path_to_particle_data,
+        double const P0C = double{ 470e9 },
+        double const MASS0 = double{ 938.272081e6 },
+        double const CHARGE0 = double{ 1. }, double const DELTA = double{ 0. } )
+    {
+        namespace dt = demotrack;
+        particles_data.clear();
+
+        if( num_of_particles == 0u ) return;
+
+        if( !path_to_particle_data.empty() )
+        {
+            ::FILE* fp = std::fopen( path_to_particle_data.c_str(), "rb" );
+
+            if( fp != nullptr )
+            {
+                double temp;
+                dt::uint64_type ret = std::fread(
+                    &temp, sizeof( double ), 1u, fp );
+
+                dt::uint64_type num_avail_particles = ( temp > 0.0 )
+                    ? static_cast< dt::uint64_type >( temp )
+                    : dt::uint64_type{ 0 };
+
+                if( ( ret == 1u ) && ( num_avail_particles > 0u ) )
+                {
+                    std::vector< dt::Particle > temp_particle_buffer(
+                        num_avail_particles, dt::Particle{} );
+
+                    for( dt::uint64_type ii = 0u ;
+                         ii < num_avail_particles ; ++ii )
+                    {
+                        ret = std::fread( &( temp_particle_buffer.back() ),
+                            sizeof( dt::Particle ), 1u, fp );
+
+                        if( ret != 1u )
+                        {
+                            auto it = temp_particle_buffer.begin();
+                            auto end = it;
+                            std::advance( it, ii );
+
+                            particles_data.assign( it, end );
+                            temp_particle_buffer.clear();
+                            temp_particle_buffer.assign(
+                                particles_data.cbegin(),
+                                particles_data.cend() );
+                            particles_data.clear();
+                            num_avail_particles = ii;
+                            break;
+                        }
+                    }
+
+                    if( num_avail_particles > 0u )
+                    {
+                        if( num_avail_particles == num_of_particles )
+                        {
+                            temp_particle_buffer.swap( particles_data );
+                        }
+                        else
+                        {
+                            particles_data.resize(
+                                num_of_particles, dt::Particle{} );
+
+                            dt::uint64_type ii = 0u;
+                            for( ; ii < num_of_particles ; ++ii )
+                            {
+                                particles_data[ ii ] = temp_particle_buffer[
+                                    ii % num_avail_particles ];
+                                particles_data[ ii ].id = ii;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if( particles_data.size() < num_of_particles )
+        {
+            if( ( !path_to_particle_data.empty() ) &&
+                ( particles_data.empty() ) )
+            {
+                path_to_particle_data.clear();
+            }
+
+            particles_data.resize( num_of_particles, dt::Particle{} );
+            dt::uint64_type particle_id = 0u;
+
+            for( auto& p : particles_data )
+            {
+                p.init( MASS0, CHARGE0, P0C, DELTA );
+                p.id = particle_id++;
+            }
+        }
+    }
+
+    DEMOTRACK_HOST_FN void Particles_load(
+        std::vector< demotrack::Particle >& __restrict__ particles_data,
+        uint64_type const num_of_particles,
+        double const P0C, double const MASS0,
+        double const CHARGE0 = double{ 1.0 },
+        double const DELTA = double{ 0. } ) {
+        std::string dummy_str = std::string{};
+        demotrack::Particles_load( particles_data, num_of_particles, dummy_str,
+            P0C, MASS0, CHARGE0, DELTA );
+    }
 }
 
 #endif /* DEMOTRACK_CUDA_PARTICLE_H__ */
