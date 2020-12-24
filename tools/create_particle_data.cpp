@@ -105,12 +105,12 @@ int main( int const argc, char* argv[] )
         double const denom = double{ 1. } / static_cast< double >(
             num_particles - 1 );
 
-        double const dX     = ( MAX_X     - MIN_X     ) / denom;
-        double const dY     = ( MAX_Y     - MIN_Y     ) / denom;
-        double const dPx    = ( MAX_PX    - MIN_PX    ) / denom;
-        double const dPy    = ( MAX_PY    - MIN_PY    ) / denom;
-        double const dZeta  = ( MAX_ZETA  - MIN_ZETA  ) / denom;
-        double const dDelta = ( MAX_DELTA - MIN_DELTA ) / denom;
+        double const dX     = ( MAX_X     - MIN_X     ) * denom;
+        double const dY     = ( MAX_Y     - MIN_Y     ) * denom;
+        double const dPx    = ( MAX_PX    - MIN_PX    ) * denom;
+        double const dPy    = ( MAX_PY    - MIN_PY    ) * denom;
+        double const dZeta  = ( MAX_ZETA  - MIN_ZETA  ) * denom;
+        double const dDelta = ( MAX_DELTA - MIN_DELTA ) * denom;
 
         double temp = static_cast< double >( num_particles );
 
@@ -131,6 +131,9 @@ int main( int const argc, char* argv[] )
             p.py = MIN_PY + dPy * ii;
             p.zeta = MIN_ZETA + dZeta * ii;
             p.id = ii++;
+            p.at_element = 0;
+            p.at_turn = 0;
+            p.state = 1;
 
             ret = std::fwrite( &p, sizeof( dt::Particle ), 1u, fp.get() );
 
