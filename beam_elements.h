@@ -51,13 +51,13 @@ namespace demotrack
         {
             using std::sqrt;
 
-            double const one_plus_delta = p.delta + 1.;
-            double const lpzi = 1. / sqrt( one_plus_delta * one_plus_delta
-                - ( p.px * p.px + p.py * p.py ) );
+            double const xp = p.px * p.rpp;
+            double const yp = p.py * p.rpp;
 
-            p.x += p.px * this->length * lpzi;
-            p.y += p.py * this->length * lpzi;
-            p.zeta += p.rvv * this->length - one_plus_delta * lpzi;
+            p.x    += this->length * xp;
+            p.y    += this->length * yp;
+            p.zeta += this->length * ( p.rvv + ( xp * xp + yp * yp ) /
+                double{ 2. } - double{ 1. } );
 
             /* NOTE: we do not increment p.at_element here -> this is done in
              * GLOBAL_APERTURE_CHECK */
@@ -92,7 +92,7 @@ namespace demotrack
             /* NOTE: we do not increment p.at_element here -> this is done in
              * GLOBAL_APERTURE_CHECK */
 
-            return slot_index + Drift::NUM_SLOTS();
+            return slot_index + DriftExact::NUM_SLOTS();
         }
 
         double type_id;
