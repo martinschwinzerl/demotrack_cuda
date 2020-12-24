@@ -135,7 +135,7 @@ namespace demotrack
                     for( dt::uint64_type ii = 0u ;
                          ii < num_avail_particles ; ++ii )
                     {
-                        ret = std::fread( &( temp_particle_buffer.back() ),
+                        ret = std::fread( &temp_particle_buffer[ ii ],
                             sizeof( dt::Particle ), 1u, fp );
 
                         if( ret != 1u )
