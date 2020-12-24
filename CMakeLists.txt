@@ -1,7 +1,7 @@
 cmake_minimum_required( VERSION 3.11 FATAL_ERROR )
 project( demotrack_cuda_cxx LANGUAGES C CXX )
 
-option( USE_BLOCKSIZE_CALCULATOR "Use blocksize calculator" OFF )
+option( USE_BLOCKSIZE_CALCULATOR "Use blocksize calculator" ON )
 set( DEMOTRACK_DEFAULT_BLOCK_SIZE "512" CACHE STRING "Default grid block size" )
 
 if( USE_BLOCKSIZE_CALCULATOR )
