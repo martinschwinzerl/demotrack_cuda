@@ -146,7 +146,6 @@ __global__ void Track_particles_until_turn(
                         slot_idx = max_lattice_buffer_index;
                     }
                 };
-
             }
 
             if( p->state == 1 )
@@ -296,7 +295,7 @@ int main( int argc, char* argv[] )
     if( !path_to_particle_data.empty() )
     {
         std::cout << "particle data         : "
-                  << path_to_lattice_data << "\r\n";
+                  << path_to_particle_data << "\r\n";
     }
     else
     {

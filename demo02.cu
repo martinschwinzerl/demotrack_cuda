@@ -298,7 +298,7 @@ int main( int argc, char* argv[] )
     if( !path_to_particle_data.empty() )
     {
         std::cout << "particle data         : "
-                  << path_to_lattice_data << "\r\n";
+                  << path_to_particle_data << "\r\n";
     }
     else
     {
