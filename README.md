@@ -78,9 +78,11 @@ tools/create_particle_data ../data/lhc_particles.bin 1024 6.5e12 938.272081e6 1.
     - A `Drift` `drift2` with a length of 5m 
     - A `Multipole` in a de-focusing quadrupole configuration `q1`
     - A `Drift` `drift3` with a length of 5m 
-    - A `Cavity` `cavity0` with a voltuage of 5000000V, a frequency of 239833966 Hz and a lag of 180 deg
-Please cf. the file `fodo_lattice.h` for details. The particle beam is consists of protons with a kinetic energy of 470 GeV. 
-Two executables are generated from `demo01.cu`: 
+    - A `Cavity` `cavity0` with a voltage of 5000000V, a frequency of 239833966 Hz and a lag of 180 deg
+        
+    Please cf. the file `lattice.h` for details. 
+    The default particle beam for the FODO lattice consists of protons with a kinetic energy of 470 GeV. 
+    Two executables are generated from `demo01.cu`: 
     - `demo01_sc0`: space-charge / beam-fields are disabled
     - `demo01_sc1`: space-charge / beam-fields are enabled
     
