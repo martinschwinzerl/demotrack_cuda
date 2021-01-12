@@ -53,8 +53,7 @@ target_link_libraries( demo02_sc0 PRIVATE ${DEMOTRACK_LINK_LIBRARIES} )
 #         BUT: tracking with thread-local / private copy of the particles,
 #              i.e. avoiding the frequent global memory accesses
 
-set( CUDA_NVCC_FLAGS "-arch=${CUDA_SM_ARCH};-fmad=false;-lineinfo;-D_FORCE_INLINES" )
-set( CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-DDEMOTRACK_ENABLE_BEAMFIELDS" )
+set( CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-DDEMOTRACK_ENABLE_BEAMFIELDS=1" )
 
 CUDA_ADD_EXECUTABLE( demo01_sc1 demo01.cu ${COMMON_HEADERS} )
 target_link_libraries( demo01_sc1 PRIVATE ${DEMOTRACK_LINK_LIBRARIES} )
