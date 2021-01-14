@@ -1,6 +1,11 @@
 cmake_minimum_required( VERSION 3.11 FATAL_ERROR )
 project( demotrack_cuda_cxx LANGUAGES C CXX )
 
+if( NOT CMAKE_BUILD_TYPE )
+  set( CMAKE_BUILD_TYPE "Release" CACHE STRING
+       "Build type [Debug ReleaseRelWithDebInfo MinSizeRel]" FORCE )
+endif()
+
 if( EXISTS ${CMAKE_SOURCE_DIR}/Settings.cmake )
     message( STATUS "loading custom settings file ${CMAKE_SOURCE_DIR}/Settings.cmake" )
     include( ${CMAKE_SOURCE_DIR}/Settings.cmake )
@@ -27,8 +32,6 @@ find_package( CUDA REQUIRED )
 # ******************************************************************************
 # demo applications
 
-set( CUDA_SM_ARCH "sm_35" )
-
 set( CMAKE_POSITION_INDEPENDENT_CODE ON )
 set( CMAKE_CXX_STANDARD 11 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
@@ -45,7 +48,16 @@ add_subdirectory( tools )
 # ------------------------------------------------------------------------------
 # demo01: particles stored in global memory, lattice stored in global memory
 
-set( CUDA_NVCC_FLAGS "-arch=${CUDA_SM_ARCH};-fmad=false;-lineinfo;-D_FORCE_INLINES" )
+set( CUDA_NVCC_FLAGS "-arch=${DEMOTRACK_CUDA_SM_ARCH};-fmad=false;-D_FORCE_INLINES" )
+
+if( DEFINED DEMOTRACK_CUDA_OPTIMIZATION AND
+    NOT "${DEMOTRACK_CUDA_OPTIMIZATION}" STREQUAL "" )
+    set( CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-Xptxas=${DEMOTRACK_CUDA_OPTIMIZATION}" )
+endif()
+
+if( DEMOTRACK_CUDA_ENABLE_LINEINFO )
+    set( CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-lineinfo" )
+endif()
 
 CUDA_ADD_EXECUTABLE( demo01_sc0 demo01.cu ${COMMON_HEADERS} )
 target_link_libraries( demo01_sc0 PRIVATE ${DEMOTRACK_LINK_LIBRARIES} )
