@@ -1,0 +1,7 @@
+set( DEMOTRACK_CUDA_SM_ARCH "sm_70" CACHE STRING "Compute capability / HW architecture" )
+set( DEMOTRACK_CUDA_OPTIMIZATION "-O3" CACHE STRING "Optimization level for ptxas compiler" )
+option( DEMOTRACK_CUDA_ENABLE_LINEINFO  "pass -lineinfo flag via nvcc" ON )
+
+option( USE_BLOCKSIZE_CALCULATOR "Use blocksize calculator" ON )
+set( DEMOTRACK_DEFAULT_BLOCK_SIZE "512" CACHE STRING "Default grid block size" )
+
