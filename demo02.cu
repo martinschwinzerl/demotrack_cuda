@@ -12,7 +12,9 @@
 #include "config.h"
 #include "particle.h"
 #include "beam_elements.h"
+#if defined( DEMOTRACK_ENABLE_BEAMFIELDS ) && ( DEMOTRACK_ENABLE_BEAMFIELDS == 1 )
 #include "beamfields.h"
+#endif /* DEMOTRACK_ENABLE_BEAMFIELDS */
 #include "lattice.h"
 
 __global__ void Track_particles_until_turn(
@@ -26,6 +28,13 @@ __global__ void Track_particles_until_turn(
 
     dt::int64_type const STRIDE = blockDim.x * gridDim.x;
     dt::int64_type idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    #if defined( DEMOTRACK_ENABLE_BEAMFIELDS ) && \
+               ( DEMOTRACK_ENABLE_BEAMFIELDS == 1 )
+    if( idx == 0 ) printf( "info :: beam-fields enabled in kernel\r\n" );
+    #else /* !defined( DEMOTRACK_ENABLE_BEAMFIELDS ) */
+    if( idx == 0 ) printf( "info :: beam-fields disabled in kernel\r\n" );
+    #endif /* DEMOTRACK_ENABLE_BEAMFIELDS */
 
     for( ; idx < num_particles ; idx += STRIDE )
     {
@@ -171,6 +180,7 @@ int main( int argc, char* argv[] )
     dt::int64_type  TRACK_UNTIL_TURN = 1000;
     std::string path_to_lattice_data = std::string{};
     std::string path_to_particle_data = std::string{};
+    std::string path_to_output_data = std::string{};
 
     if( argc >= 2 )
     {
@@ -183,10 +193,21 @@ int main( int argc, char* argv[] )
             if( argc >= 4 )
             {
                 path_to_particle_data = std::string{ argv[ 3 ] };
+                if( path_to_particle_data.compare( "default" ) == 0 ) {
+                    path_to_particle_data.clear(); }
 
                 if( argc >= 5 )
                 {
                     path_to_lattice_data = std::string{ argv[ 4 ] };
+                    if( path_to_lattice_data.compare( "default" ) == 0 ) {
+                        path_to_lattice_data.clear(); }
+
+                    if( argc >= 6 )
+                    {
+                        path_to_output_data = std::string{ argv[ 5 ] };
+                        if( path_to_output_data.compare( "none" ) == 0 ) {
+                            path_to_output_data.clear(); }
+                    }
                 }
             }
         }
@@ -195,7 +216,8 @@ int main( int argc, char* argv[] )
     {
         std::cout << "Usage : " << argv[ 0 ]
                   << " [NUM_PARTICLES] [TRACK_UNTIL_TURN]"
-                  << " [PATH_TO_PARTICLE_DATA] [PATH_TO_LATTICE_DATA]\r\n"
+                  << " [PATH_TO_PARTICLE_DATA] [PATH_TO_LATTICE_DATA]"
+                  << " [PATH_TO_OUTPUT_DATA]\r\n"
                   << std::endl;
     }
 
@@ -245,7 +267,7 @@ int main( int argc, char* argv[] )
     int MIN_GRID_SIZE = 0;
 
     #if defined( DEMOTRACK_CUDA_CALCULATE_BLOCKSIZE ) && \
-        ( DEMOTRACK_CUDA_CALCULATE_BLOCKSIZE == 1 )
+               ( DEMOTRACK_CUDA_CALCULATE_BLOCKSIZE == 1 )
 
     status = ::cudaOccupancyMaxPotentialBlockSize(
         &MIN_GRID_SIZE, /* -> minimum grid size needed for max occupancy */
@@ -257,7 +279,7 @@ int main( int argc, char* argv[] )
     assert( status == CUDA_SUCCESS );
 
     #elif defined( DEMOTRACK_DEFAULT_BLOCK_SIZE ) && \
-         ( DEMOTRACK_DEFAULT_BLOCK_SIZE > 0 )
+                 ( DEMOTRACK_DEFAULT_BLOCK_SIZE > 0 )
 
     BLOCK_SIZE = DEMOTRACK_DEFAULT_BLOCK_SIZE;
 
@@ -327,6 +349,11 @@ int main( int argc, char* argv[] )
               << "NUM_OF_BLOCKS         : " << GRID_SIZE << "\r\n"
               << "MIN_GRID_SIZE         : " << MIN_GRID_SIZE << "\r\n"
               << "THREADS_PER_BLOCK     : " << BLOCK_SIZE << "\r\n";
+
+    if( !path_to_output_data.empty() )
+    {
+        std::cout << "path to output data : " << path_to_output_data << "\r\n";
+    }
 
     /* Prepare cuda events to estimate the elapsed wall time */
 
@@ -403,6 +430,29 @@ int main( int argc, char* argv[] )
               << "num lost particles    : " << num_lost_particles << "\r\n"
               << "num active particles  : " << num_active_particles << "\r\n"
               << std::endl;
+
+    if( !path_to_output_data.empty() )
+    {
+        FILE* fp = std::fopen( path_to_output_data.c_str(), "wb" );
+        double const temp = static_cast< double >( particles_host.size() );
+        auto ret = std::fwrite( &temp, sizeof( double ), 1u, fp );
+        bool success = ( ret == 1 );
+
+        for( auto const& p : particles_host )
+        {
+            ret = std::fwrite( &p, sizeof( dt::Particle ), 1u, fp );
+            success &= ( ret == 1 );
+        }
+
+        if( success )
+        {
+            std::cout << "Written particle state to " << path_to_output_data
+                      << "\r\n" << std::endl;
+        }
+
+        std::fflush( fp );
+        std::fclose( fp );
+    }
 
     /* ********************************************************************* */
     /* Cleaning up, Freeing resources */
