@@ -131,8 +131,56 @@ __global__ void Track_particles_until_turn(
                         break;
                     }
 
+                    case dt::BEAM_ELEMENT_LIMIT_RECT: // cf. beam_elements.h
+                    {
+                        const dt::LimitRect *const __restrict__ elem =
+                            ( dt::LimitRect const* )&lattice_buffer[ slot_idx ];
+
+                        dt::uint64_type const next_slot_idx =
+                            elem->track( *p, slot_idx );
+
+                        slot_idx = next_slot_idx;
+                        break;
+                    }
+
+                    case dt::BEAM_ELEMENT_LIMIT_ELLIPSE: // cf. beam_elements.h
+                    {
+                        const dt::LimitEllipse *const __restrict__ elem =
+                            ( dt::LimitEllipse const* )&lattice_buffer[ slot_idx ];
+
+                        dt::uint64_type const next_slot_idx =
+                            elem->track( *p, slot_idx );
+
+                        slot_idx = next_slot_idx;
+                        break;
+                    }
+
+                    case dt::BEAM_ELEMENT_LIMIT_RECT_ELLIPSE: // cf. beam_elements.h
+                    {
+                        const dt::LimitRectEllipse *const __restrict__ elem =
+                            ( dt::LimitRectEllipse const* )&lattice_buffer[ slot_idx ];
+
+                        dt::uint64_type const next_slot_idx =
+                            elem->track( *p, slot_idx );
+
+                        slot_idx = next_slot_idx;
+                        break;
+                    }
+
+                    case dt::BEAM_ELEMENT_DIPEDGE: // cf. beam_elements.h
+                    {
+                        const dt::DipoleEdge *const __restrict__ elem =
+                            ( dt::DipoleEdge const* )&lattice_buffer[ slot_idx ];
+
+                        dt::uint64_type const next_slot_idx =
+                            elem->track( *p, slot_idx );
+
+                        slot_idx = next_slot_idx;
+                        break;
+                    }
+
                     #if defined( DEMOTRACK_ENABLE_BEAMFIELDS ) && \
-                        DEMOTRACK_ENABLE_BEAMFIELDS == 1
+                               ( DEMOTRACK_ENABLE_BEAMFIELDS == 1 )
 
                     case dt::BEAM_ELEMENT_SC_COASTING: // cf. beamfields.h
                     {
