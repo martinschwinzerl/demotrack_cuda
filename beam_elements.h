@@ -17,7 +17,11 @@ namespace demotrack
         BEAM_ELEMENT_CAVITY = 5,
         BEAM_ELEMENT_XY_SHIFT = 6,
         BEAM_ELEMENT_SROTATION = 7,
+        BEAM_ELEMENT_LIMIT_RECT = 11,
+        BEAM_ELEMENT_LIMIT_ELLIPSE = 12,
+        BEAM_ELEMENT_LIMIT_RECT_ELLIPSE = 13,
         BEAM_ELEMENT_SC_COASTING = 16,
+        BEAM_ELEMENT_DIPEDGE = 24,
         BEAM_ELEMENT_END_OF_TRACK = 255
     }
     beam_element_type;
@@ -252,6 +256,115 @@ namespace demotrack
         double type_id;
         double cos_z;
         double sin_z;
+    };
+
+    struct __attribute__((aligned( 8 ))) LimitRect
+    {
+        DEMOTRACK_FN static constexpr uint64_type NUM_SLOTS() noexcept
+        {
+            return uint64_type{ 5 };
+        }
+
+        DEMOTRACK_FN uint64_type track( Particle& __restrict__ p,
+            uint64_type const slot_index ) const noexcept
+        {
+            p.state &= ( ( p.x >= this->min_x ) && ( p.x <= this->max_x ) &&
+                         ( p.y >= this->min_y ) && ( p.y <= this->max_y ) );
+
+            // NOTE: The particle should not be here if it is lost!!!
+            // But: effectively only increment if particle is not lost
+            p.at_element += p.state;
+
+            return slot_index + LimitRect::NUM_SLOTS();
+        }
+
+        double type_id;
+        double min_x;
+        double max_x;
+        double min_y;
+        double max_y;
+    };
+
+    struct __attribute__((aligned( 8 ))) LimitEllipse
+    {
+        DEMOTRACK_FN static constexpr uint64_type NUM_SLOTS() noexcept
+        {
+            return uint64_type{ 4 };
+        }
+
+        DEMOTRACK_FN uint64_type track( Particle& __restrict__ p,
+            uint64_type const slot_index ) const noexcept
+        {
+            p.state &= ( this->ab_squ > (
+                p.x * p.x * this->b_squ + p.y * p.y * this->a_squ ) );
+
+            // NOTE: The particle should not be here if it is lost!!!
+            // But: effectively only increment if particle is not lost
+            p.at_element += p.state;
+
+            return slot_index + LimitEllipse::NUM_SLOTS();
+        }
+
+        double type_id;
+        double a_squ;
+        double b_squ;
+        double ab_squ;
+    };
+
+    struct __attribute__((aligned( 8 ))) LimitRectEllipse
+    {
+        DEMOTRACK_FN static constexpr uint64_type NUM_SLOTS() noexcept
+        {
+            return uint64_type{ 6 };
+        }
+
+        DEMOTRACK_FN uint64_type track( Particle& __restrict__ p,
+            uint64_type const slot_index ) const noexcept
+        {
+            p.state &= (
+                ( p.x <= this->max_x ) && ( p.x >= -this->max_x ) &&
+                ( p.y <= this->max_y ) && ( p.y >= -this->max_y ) &&
+                ( this->ab_squ > ( p.x * p.x * this->b_squ +
+                                   p.y * p.y * this->a_squ ) ) );
+
+            // NOTE: The particle should not be here if it is lost!!!
+            // But: effectively only increment if particle is not lost
+            p.at_element += p.state;
+
+            return slot_index + LimitRectEllipse::NUM_SLOTS();
+        }
+
+        double type_id;
+        double max_x;
+        double max_y;
+        double a_squ;
+        double b_squ;
+        double ab_squ;
+    };
+
+    struct __attribute__((aligned( 8 ))) DipoleEdge
+    {
+        DEMOTRACK_FN static constexpr uint64_type NUM_SLOTS() noexcept
+        {
+            return uint64_type{ 3 };
+        }
+
+        DEMOTRACK_FN uint64_type track( Particle& __restrict__ p,
+            uint64_type const slot_index ) const noexcept
+        {
+            p.px += this->r21 * p.x;
+            p.py += this->r43 * p.y;
+
+            // NOTE: The particle should not be here if it is lost!!!
+            // But: effectively only increment if particle is not lost
+            p.at_element += p.state;
+
+            return slot_index + DipoleEdge::NUM_SLOTS();
+        }
+
+        double type_id;
+        double r21;
+        double r43;
     };
 
     struct __attribute__((aligned( 8 ))) EndOfTrack
