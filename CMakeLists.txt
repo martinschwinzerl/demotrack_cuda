@@ -28,6 +28,7 @@ configure_file( config.h.template ${CMAKE_SOURCE_DIR}/config.h @ONLY )
 # Set environment variable CUDA_BIN_PATH to the directory containing nvcc or
 # CUDA_TOOLKIT_ROOT_DIR variable to hint the CUDA install location
 find_package( CUDA REQUIRED )
+include_directories( ${CUDA_INCLUDE_DIRS} )
 
 # ******************************************************************************
 # demo applications
