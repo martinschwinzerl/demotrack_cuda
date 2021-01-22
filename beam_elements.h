@@ -120,8 +120,7 @@ namespace demotrack
             double dPx = this->bal[ index_x ];
             double dPy = this->bal[ index_y ];
 
-            for( index_x -= 2, index_y -= 2 ; index_x >= 0 ;
-                 index_x -= 2, index_y -= 2 )
+            for( ; index_x >= 0 ; index_x -= 2, index_y -= 2 )
             {
                 double const z_real = dPx * p.x - dPy * p.y;
                 double const z_imag = dPx * p.y + dPy * p.x;
