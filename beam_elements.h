@@ -60,8 +60,8 @@ namespace demotrack
 
             p.x    += this->length * xp;
             p.y    += this->length * yp;
-            p.zeta += this->length * ( p.rvv + ( xp * xp + yp * yp ) /
-                double{ 2. } - double{ 1. } );
+            p.zeta += this->length * ( p.rvv -
+                ( double{ 1.0 } + double{ 0.5 } * ( xp * xp + yp * yp ) ) );
 
             /* NOTE: we do not increment p.at_element here -> this is done in
              * GLOBAL_APERTURE_CHECK */
