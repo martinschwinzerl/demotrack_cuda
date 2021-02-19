@@ -113,20 +113,16 @@ namespace demotrack
         DEMOTRACK_FN uint64_type track( Particle& __restrict__ p,
             uint64_type const slot_index ) const noexcept
         {
-            int64_type const order = ( int64_type )this->order;
-            int64_type index_x = 2 * order;
-            int64_type index_y = index_x + 1;
+            double dPx = double{ 0.0 };
+            double dPy = double{ 0.0 };
 
-            double dPx = this->bal[ index_x ];
-            double dPy = this->bal[ index_y ];
+            int64_type index_x = 2 * ( int64_type )this->order;
 
-            for( ; index_x >= 0 ; index_x -= 2, index_y -= 2 )
+            for( ; index_x >= int64_type{ 0 } ; index_x -= 2 )
             {
-                double const z_real = dPx * p.x - dPy * p.y;
-                double const z_imag = dPx * p.y + dPy * p.x;
-
-                dPx = this->bal[ index_x ] + z_real;
-                dPy = this->bal[ index_y ] + z_imag;
+                double const dPx_saved = dPx;
+                dPx = this->bal[ index_x     ] + dPx       * p.x - dPy * p.y;
+                dPy = this->bal[ index_x + 1 ] + dPx_saved * p.y + dPy * p.x;
             }
 
             dPx *= -p.chi;
